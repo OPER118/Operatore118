@@ -687,11 +687,10 @@ class EmergencyDispatchGame {
         this.updateMezzoMarkers();
     }    async loadMezzi() {
          try {             // Determine base mezzi file based on selected central
-             let baseFile = 'src/data/mezzi_sra.json';
-             switch(window.selectedCentral) {
+             let baseFile = 'src/data/mezzi_sra.json';             switch(window.selectedCentral) {
                  case 'SRL': baseFile = 'src/data/Mezzi_SRL.json'; break;
                  case 'SRM': baseFile = 'src/data/mezzi_srm.json'; break;
-                 case 'SRP': baseFile = 'src/data/Mezzi_SRP.json'; break; // Corretto per case sensitivity su GitHub Pages
+                 case 'SRP': baseFile = 'src/data/mezzi_srp.json'; break; // Corretto per case sensitivity
              }
              // Fetch the base file directly
              const response = await fetch(baseFile);
