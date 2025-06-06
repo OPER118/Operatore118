@@ -232,8 +232,7 @@
         if (hdr) hdr.textContent = sel.options[sel.selectedIndex].text;
         // Load corresponding indirizzi if not default SRA
         if (window.selectedCentral !== 'SRA') {
-            const rawPath = `src/data/indirizzi ${window.selectedCentral}.json`;
-            const path = encodeURI(rawPath);
+            const path = `src/data/indirizzi ${window.selectedCentral}.json`;
             try {
                 const resp = await fetch(path);
                 const data = await resp.json();
