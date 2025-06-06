@@ -455,6 +455,8 @@ function aggiornaDisponibilitaMezzi() {
 
 class EmergencyDispatchGame {
     constructor() {
+        // Flag per abilitare/disabilitare chiamate automatiche
+        this.autoCallsEnabled = true;
         // Inizializza le proprietà base
         this.mezzi = [];
         this.calls = new Map();
@@ -487,7 +489,25 @@ class EmergencyDispatchGame {
         } else {
             this.ui = new GameUI(this);
         }
-
+        // Gestione checkbox "Sospendi chiamate"
+        document.addEventListener('DOMContentLoaded', () => {
+            const cb = document.getElementById('auto-calls-checkbox');
+            if (!cb) return;
+            // Stato iniziale inverso del checked
+            this.autoCallsEnabled = !cb.checked;
+            cb.addEventListener('change', () => {
+                this.autoCallsEnabled = !cb.checked;
+                console.log(`Chiamate automatiche ${this.autoCallsEnabled ? 'riprese' : 'sospese'}`);
+                if (!this.autoCallsEnabled) {
+                    // Cancella eventuali timeout pendenti
+                    window._simTimeouts.forEach(id => clearTimeout(id));
+                    window._simTimeouts = [];
+                } else {
+                    // Riprendi schedulazione chiamate
+                    this.scheduleNextCall();
+                }
+            });
+        });
         simInterval(() => {
             aggiornaDisponibilitaMezzi();
             const now = window.simTime
@@ -640,6 +660,7 @@ class EmergencyDispatchGame {
                 // Genera la prima chiamata entro 5-10 secondi di tempo simulato
                 const initInterval = Math.floor(Math.random() * 6) + 5;
                 simTimeout(() => {
+                    if (!this.autoCallsEnabled) return;
                     this.generateNewCall();
                     this.scheduleNextCall();
                 }, initInterval);
@@ -651,6 +672,8 @@ class EmergencyDispatchGame {
 
     // Schedule automatic new calls at random intervals based on simulated time
     scheduleNextCall() {
+        // Do not schedule if auto-calls suspended
+        if (!this.autoCallsEnabled) return;
         // Determine current simulated hour
         const sec = window.simTime || 0;
         const hour = Math.floor(sec / 3600);
@@ -666,6 +689,8 @@ class EmergencyDispatchGame {
         }
         const interval = Math.floor(Math.random() * (maxInterval - minInterval + 1)) + minInterval;
         simTimeout(() => {
+            // Skip if auto-calls suspended
+            if (!this.autoCallsEnabled) return;
             this.generateNewCall();
             this.scheduleNextCall();
         }, interval);
@@ -1023,7 +1048,7 @@ class EmergencyDispatchGame {
                const pianuraList = await resPianura.json();
                (Array.isArray(pianuraList)? pianuraList : []).forEach(h=>{
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
-                   const lat=coords[0], lon=coords[1];
+                   const lat = coords[0], lon = coords[1];
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: `(SRP) ${h.OSPEDALE?.trim()||''}`, lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // render markers
