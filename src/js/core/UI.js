@@ -724,13 +724,8 @@ class GameUI {
 
         // Prepara liste mezzi: tieni mezzi della centrale corrente e di Creli; altri centrali solo se stato != 1 e != 8
         const allMezzi = window.game.mezzi || [];
-        let mezzi = allMezzi.filter(m => {
-            const isForeign = m.nome_radio.startsWith('(');
-            if (!isForeign) {
-                return true;
-            }
-            return m.stato !== 1 && m.stato !== 8;
-        });
+        // Show all vehicles from all centrals, including idle foreign ones
+        let mezzi = allMezzi;
         const mezziStato8 = mezzi.filter(m => m.stato === 8);
         let altriMezzi = mezzi.filter(m => m.stato !== 8);
         altriMezzi.forEach(m => {
