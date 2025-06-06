@@ -718,7 +718,7 @@ class EmergencyDispatchGame {
     }    async loadMezzi() {
          try {             // Determine base mezzi file based on selected central
              let baseFile = 'src/data/mezzi_sra.json';             switch(window.selectedCentral) {
-                 case 'SRL': baseFile = 'src/data/Mezzi_SRL.json'; break;
+                 case 'SRL': baseFile = 'src/data/mezzi_srl.json'; break;
                  case 'SRM': baseFile = 'src/data/mezzi_srm.json'; break;
                  case 'SRP': baseFile = 'src/data/mezzi_srp.json'; break; // Corretto per case sensitivity
              }
