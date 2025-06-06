@@ -489,25 +489,6 @@ class EmergencyDispatchGame {
         } else {
             this.ui = new GameUI(this);
         }
-        // Gestione checkbox "Sospendi chiamate"
-        document.addEventListener('DOMContentLoaded', () => {
-            const cb = document.getElementById('auto-calls-checkbox');
-            if (!cb) return;
-            // Stato iniziale inverso del checked
-            this.autoCallsEnabled = !cb.checked;
-            cb.addEventListener('change', () => {
-                this.autoCallsEnabled = !cb.checked;
-                console.log(`Chiamate automatiche ${this.autoCallsEnabled ? 'riprese' : 'sospese'}`);
-                if (!this.autoCallsEnabled) {
-                    // Cancella eventuali timeout pendenti
-                    window._simTimeouts.forEach(id => clearTimeout(id));
-                    window._simTimeouts = [];
-                } else {
-                    // Riprendi schedulazione chiamate
-                    this.scheduleNextCall();
-                }
-            });
-        });
         simInterval(() => {
             aggiornaDisponibilitaMezzi();
             const now = window.simTime
@@ -655,16 +636,14 @@ class EmergencyDispatchGame {
              if (this.ui && typeof this.ui.updateStatoMezzi === 'function') {
                  this.ui.updateStatoMezzi();
              }
-            // Start automatic call generation
-            if (window.simTimeInit) {
-                // Genera la prima chiamata entro 5-10 secondi di tempo simulato
-                const initInterval = Math.floor(Math.random() * 6) + 5;
-                simTimeout(() => {
-                    if (!this.autoCallsEnabled) return;
-                    this.generateNewCall();
-                    this.scheduleNextCall();
-                }, initInterval);
-            }
+            // Start automatic call generation: schedule first call within 5-10s
+            // Genera la prima chiamata entro 5-10 secondi di tempo simulato
+            const initInterval = Math.floor(Math.random() * 6) + 5;
+            simTimeout(() => {
+                if (!this.autoCallsEnabled) return;
+                this.generateNewCall();
+                this.scheduleNextCall();
+            }, initInterval);
          } catch (e) {
              console.error("Error during initialization:", e);
          }
@@ -848,7 +827,7 @@ class EmergencyDispatchGame {
             if (window.selectedCentral === 'SRA') {
                 // SRL
                 try {
-                    const res = await fetch('src/data/Mezzi_SRL.json');
+                    const res = await fetch(encodeURI('src/data/mezzi_srl.json'));
                     let arr = await res.json(); if (!Array.isArray(arr)) arr = Object.values(arr).find(v=>Array.isArray(v))||[];
                     arr.forEach(item => {
                         const nomePost = (item['Nome Postazione']||'').trim(); if (!nomePost) return;
@@ -982,7 +961,7 @@ class EmergencyDispatchGame {
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: h.OSPEDALE?.trim()||'', lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 2) PS SOREU Laghi (prefisso SRL)
-               const resLaghi = await fetch('src/data/PS SOREU laghi.json');
+               const resLaghi = await fetch(encodeURI('src/data/PS SOREU laghi.json'));
                const laghiList = await resLaghi.json();
                (Array.isArray(laghiList)? laghiList : []).forEach(h=>{
                    const coords=(h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -990,7 +969,7 @@ class EmergencyDispatchGame {
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: `(SRL) ${h.OSPEDALE?.trim()||''}`, lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 3) PS SOREU Metro (prefisso SRM)
-               const resMetro = await fetch('src/data/PS SOREU Metro.json');
+               const resMetro = await fetch(encodeURI('src/data/PS SOREU Metro.json'));
                const metroList = await resMetro.json();
                (Array.isArray(metroList)? metroList : []).forEach(h=>{
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -998,7 +977,7 @@ class EmergencyDispatchGame {
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: `(SRM) ${h.OSPEDALE?.trim()||''}`, lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 4) PS SOREU Pianura (prefisso SRP)
-               const resPianura = await fetch('src/data/PS SOREU pianura.json');
+               const resPianura = await fetch(encodeURI('src/data/PS SOREU pianura.json'));
                const pianuraList = await resPianura.json();
                (Array.isArray(pianuraList)? pianuraList : []).forEach(h=>{
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1019,7 +998,7 @@ class EmergencyDispatchGame {
            if (window.selectedCentral === 'SRL') {
                let hospitalsAll = [];
                // 1) PS SOREU Laghi (appare prima)
-               const resLaghi = await fetch('src/data/PS SOREU laghi.json');
+               const resLaghi = await fetch(encodeURI('src/data/PS SOREU laghi.json'));
                const laghiList = await resLaghi.json();
                (Array.isArray(laghiList)? laghiList : []).forEach(h=>{
                    const coords=(h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1036,7 +1015,7 @@ class EmergencyDispatchGame {
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: `(SRA) ${h.OSPEDALE?.trim()||''}`, lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 3) PS SOREU Metro (prefisso SRM)
-               const resMetro = await fetch('src/data/PS SOREU Metro.json');
+               const resMetro = await fetch(encodeURI('src/data/PS SOREU Metro.json'));
                const metroList = await resMetro.json();
                (Array.isArray(metroList)? metroList : []).forEach(h=>{
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1044,7 +1023,7 @@ class EmergencyDispatchGame {
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: `(SRM) ${h.OSPEDALE?.trim()||''}`, lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 4) PS SOREU Pianura (prefisso SRP)
-               const resPianura = await fetch('src/data/PS SOREU pianura.json');
+               const resPianura = await fetch(encodeURI('src/data/PS SOREU pianura.json'));
                const pianuraList = await resPianura.json();
                (Array.isArray(pianuraList)? pianuraList : []).forEach(h=>{
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1065,7 +1044,7 @@ class EmergencyDispatchGame {
            if (window.selectedCentral === 'SRM') {
                let hospitalsAll = [];
                // 1) PS SOREU Metro
-               const resMetro = await fetch('src/data/PS SOREU Metro.json');
+               const resMetro = await fetch(encodeURI('src/data/PS SOREU Metro.json'));
                const metroList = await resMetro.json();
                (Array.isArray(metroList)? metroList : [])
                .forEach(h=>{
@@ -1074,7 +1053,7 @@ class EmergencyDispatchGame {
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: h.OSPEDALE?.trim()||'', lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 2) PS SOREU Laghi (prefisso SRL)
-               const resLaghi = await fetch('src/data/PS SOREU laghi.json');
+               const resLaghi = await fetch(encodeURI('src/data/PS SOREU laghi.json'));
                const laghiList = await resLaghi.json();
                (Array.isArray(laghiList)? laghiList : []).forEach(h=>{
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1082,7 +1061,7 @@ class EmergencyDispatchGame {
                    if(lat!=null&&lon!=null) hospitalsAll.push({ nome: `(SRL) ${h.OSPEDALE?.trim()||''}`, lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 3) PS SOREU Pianura (prefisso SRP)
-               const resPianura = await fetch('src/data/PS SOREU pianura.json');
+               const resPianura = await fetch(encodeURI('src/data/PS SOREU pianura.json'));
                const pianuraList = await resPianura.json();
                (Array.isArray(pianuraList)? pianuraList : []).forEach(h=>{
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1112,7 +1091,7 @@ class EmergencyDispatchGame {
            if (window.selectedCentral === 'SRP') {
                let hospitalsAll = [];
                // 1) PS SOREU Pianura (appare prima)
-               const resPianura = await fetch('src/data/PS SOREU pianura.json');
+               const resPianura = await fetch(encodeURI('src/data/PS SOREU pianura.json'));
                const pianuraList = await resPianura.json();
                (Array.isArray(pianuraList) ? pianuraList : []).forEach(h => {
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1120,7 +1099,7 @@ class EmergencyDispatchGame {
                    if (lat!=null && lon!=null) hospitalsAll.push({ nome: h.OSPEDALE?.trim()||'', lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 2) PS SOREU Laghi (prefisso SRL)
-               const resLaghi = await fetch('src/data/PS SOREU laghi.json');
+               const resLaghi = await fetch(encodeURI('src/data/PS SOREU laghi.json'));
                const laghiList = await resLaghi.json();
                (Array.isArray(laghiList) ? laghiList : []).forEach(h => {
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
@@ -1128,7 +1107,7 @@ class EmergencyDispatchGame {
                    if (lat!=null && lon!=null) hospitalsAll.push({ nome: `(SRL) ${h.OSPEDALE?.trim()||''}`, lat, lon, indirizzo: h.INDIRIZZO||'', raw: h });
                });
                // 3) PS SOREU Metro (prefisso SRM)
-               const resMetro = await fetch('src/data/PS SOREU Metro.json');
+               const resMetro = await fetch(encodeURI('src/data/PS SOREU Metro.json'));
                const metroList = await resMetro.json();
                (Array.isArray(metroList) ? metroList : []).forEach(h => {
                    const coords = (h.COORDINATE||'').split(',').map(s=>Number(s.trim()));
